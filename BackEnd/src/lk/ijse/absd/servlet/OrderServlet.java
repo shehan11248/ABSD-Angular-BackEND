@@ -72,7 +72,7 @@ public class OrderServlet extends HttpServlet {
                 pstm.setObject(1, orderID);
                 pstm.setObject(2, orderDetail.getString("code"));
                 pstm.setObject(3, orderDetail.getInt("qty"));
-                pstm.setObject(4, orderDetail.getString("subPrice"));
+                pstm.setObject(4, orderDetail.getInt("subPrice"));
 
                 affectedRows = pstm.executeUpdate();
 
