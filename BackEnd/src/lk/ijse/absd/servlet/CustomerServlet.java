@@ -14,10 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 
 @WebServlet(urlPatterns = "/customers")
 public class CustomerServlet extends HttpServlet {
@@ -69,8 +66,15 @@ public class CustomerServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         System.out.println("do Post");
+
+        JsonReader reader = Json.createReader(req.getReader());
+        resp.setContentType("application/json");
+
+        PrintWriter out = resp.getWriter();
+
+        Connection connection = null;
         try {
-            JsonReader reader = Json.createReader(req.getReader());
+            reader = Json.createReader(req.getReader());
             JsonObject customer = reader.readObject();
 
             String id = customer.getString("id");
@@ -78,7 +82,7 @@ public class CustomerServlet extends HttpServlet {
             String address = customer.getString("address");
             String salary = customer.getString("salary");
 
-            Connection connection = ds.getConnection();
+            connection = ds.getConnection();
             PreparedStatement pstm = connection.prepareStatement("INSERT INTO Customer VALUES (?,?,?,?)");
             pstm.setObject(1, id);
             pstm.setObject(2, name);
@@ -89,17 +93,22 @@ public class CustomerServlet extends HttpServlet {
             System.out.println("value : " + value);
 
             if (value) {
-                System.out.println("true");
-                resp.setStatus(HttpServletResponse.SC_OK);
+                out.println("true");
             } else {
-                System.out.println("error");
-                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.println("false");
             }
 
         } catch (JsonParsingException | NullPointerException ex) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         } catch (Exception ex) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            out.close();
         }
 
     }
