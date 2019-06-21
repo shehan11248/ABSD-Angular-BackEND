@@ -36,17 +36,18 @@ public class OrderServlet extends HttpServlet {
 
             JsonObject order = JSON.getJsonObject("order");
 
-            String orderID = order.getString("orderid");
+            String orderID = order.getString("orderID");
 
             JsonArray orderDetails = JSON.getJsonArray("orderDetails");
 
+            System.out.println("sdfs " + orderDetails.toString());
             connection = ds.getConnection();
             connection.setAutoCommit(false);
 
             String sql = "INSERT INTO Orders VALUES (?,?,?)";
             PreparedStatement pstm = connection.prepareStatement(sql);
             pstm.setString(2, order.getString("date"));
-            pstm.setString(3, order.getString("customerid"));
+            pstm.setString(3, order.getString("customerID"));
             pstm.setString(1, orderID);
 
             int affectedRows = pstm.executeUpdate();
@@ -63,12 +64,13 @@ public class OrderServlet extends HttpServlet {
             sql = "INSERT INTO  ItemDetail VALUES (?,?,?,?)";
             pstm = connection.prepareStatement(sql);
 
-            for (int i = 0; i < orderDetails.size() - 1; i++) {
+            for (int i = 0; i < orderDetails.size(); i++) {
 
+                System.out.println(i);
                 JsonObject orderDetail = orderDetails.get(i).asJsonObject();
 
                 pstm.setObject(1, orderID);
-                pstm.setObject(2, orderDetail.getString("itemCode"));
+                pstm.setObject(2, orderDetail.getString("code"));
                 pstm.setObject(3, orderDetail.getInt("qty"));
                 pstm.setObject(4, orderDetail.getString("subPrice"));
 
@@ -80,7 +82,7 @@ public class OrderServlet extends HttpServlet {
                 }
 
                 Statement stm = connection.createStatement();
-                ResultSet rst = stm.executeQuery("SELECT * FROM Item WHERE code='" + orderDetail.getString("itemCode") + "'");
+                ResultSet rst = stm.executeQuery("SELECT * FROM Item WHERE code='" + orderDetail.getString("code") + "'");
 
                 int qtyOnHand = 0;
 
@@ -91,7 +93,7 @@ public class OrderServlet extends HttpServlet {
                 PreparedStatement pstm2 = connection.prepareStatement("UPDATE Item SET qtyOnHand=? WHERE code=?");
 
                 pstm2.setObject(1, qtyOnHand - orderDetail.getInt("qty"));
-                pstm2.setObject(2, orderDetail.getString("itemCode"));
+                pstm2.setObject(2, orderDetail.getString("code"));
 
                 affectedRows = pstm2.executeUpdate();
 
